@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background-color: white;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .flash {
+        animation-name: flash;
+        animation-duration: 0.5s;
+        animation-iteration-count: 1;
+        animation-timing-function: ease;
+      }
+      @keyframes flash {
+        from {
+          background-color: #0f0;
+        }
+        to {
+          background-color: inherit;
+        }
+      }
+    </style>
+    <title>Captcha</title>
+  </head>
+  <body>
+    <div id="recaptcha"></div>
+    <div id="hcaptcha"></div>
+    <script src="https://www.google.com/recaptcha/api.js?onload=onReCaptchaLoad&render=explicit"></script>
+    <script src="https://js.hcaptcha.com/1/api.js?hl=en&onload=onHCaptchaLoad&render=explicit&recaptchacompat=off" async defer></script>
+    <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <script>
+      console.error(window.navigator.userAgent);
+      const onReCaptchaReady = new Promise((resolve) => {
+        window.onReCaptchaLoad = resolve;
+      });
+
+      const onHCaptchaReady = new Promise((resolve) => {
+        window.onHCaptchaLoad = resolve;
+      });
+
+      let currentCaptcha = null;
+      let currentWidgetId = null;
+
+      new QWebChannel(qt.webChannelTransport, (channel) => {
+        try {
+          // we cannot destructure here since these are proxy objects
+          const bridge = channel.objects.bridge;
+
+          const callback = (token) => {
+            bridge.token(token);
+
+            // green flash
+            document.body.classList.add("flash");
+            document.body.addEventListener(
+              "animationend",
+              () => {
+                document.body.classList.remove("flash");
+              },
+              {
+                once: true,
+              },
+            );
+          };
+
+          const startCaptcha = async (sitekey, captchaType) => {
+            switch (captchaType) {
+              case "RECAPTCHA_V2":
+              case "RECAPTCHA_V3":
+                await onReCaptchaReady;
+
+                if (currentWidgetId !== null) {
+                  grecaptcha.reset(currentWidgetId);
+                }
+                break;
+              case "HCAPTCHA":
+                await onHCaptchaReady;
+
+                if (currentWidgetId !== null) {
+                  hcaptcha.reset(currentWidgetId);
+                }
+                break;
+            }
+            currentCaptcha = captchaType;
+
+            switch (captchaType) {
+              case "RECAPTCHA_V2":
+                currentWidgetId = grecaptcha.render("recaptcha", {
+                  sitekey,
+                  callback,
+                  "error-callback": (error) => bridge.error(error),
+                });
+                break;
+              case "RECAPTCHA_V3":
+                bridge.error("This captcha is temporarily out of order.");
+                break;
+                currentWidgetId = grecaptcha.execute(sitekey, {
+                  callback,
+                  "error-callback": (error) => bridge.error(error),
+                });
+                break;
+              case "HCAPTCHA":
+                currentWidgetId = hcaptcha.render("hcaptcha", {
+                  sitekey,
+                  callback,
+                  "error-callback": (error) => bridge.error(error),
+                });
+                break;
+              default:
+                bridge.error(`Captcha of type ${captchaType} is not supported.`);
+                break;
+            }
+          };
+
+          bridge.start.connect((sitekey, captcha_type) => {
+            startCaptcha(sitekey, captcha_type);
+          });
+
+          bridge.reset.connect(() => {
+            resetLastCaptcha();
+          });
+
+          bridge.ready();
+        } catch (message) {
+          bridge.error(message + "");
+        }
+      });
+    </script>
+  </body>
+</html>

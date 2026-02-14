@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "embed_captcha_JURAKIN"
+version = "0.0.1"
+authors = [{ name = "Jurakin", email = "jurakin.dev@gmail.com" }]
+description = "A small library that displays a captcha challenge and returns a captcha response token."
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+dependencies = ["PyQt5", "PyQtWebEngine"]
+
+[project.urls]
+Homepage = "https://github.com/jurakin/embed-captcha"
+Issues = "https://github.com/jurakin/embed-captcha/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
