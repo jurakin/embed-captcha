@@ -40,7 +40,6 @@
     <script src="https://js.hcaptcha.com/1/api.js?hl=en&onload=onHCaptchaLoad&render=explicit&recaptchacompat=off" async defer></script>
     <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
     <script>
-      console.error(window.navigator.userAgent);
       const onReCaptchaReady = new Promise((resolve) => {
         window.onReCaptchaLoad = resolve;
       });

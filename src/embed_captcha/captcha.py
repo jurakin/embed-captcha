@@ -68,7 +68,7 @@ class Window(QMainWindow):
         self.closed.emit()
 
 class Captcha:
-    def __init__(self, site_key: str, host: QUrl | str, captcha_type: CaptchaType | None = None, title: str | None = None, profile: QWebEngineProfile | None = None):
+    def __init__(self, site_key: str | None = None, host: QUrl | str | None = None, captcha_type: CaptchaType | None = None, title: str | None = None, profile: QWebEngineProfile | None = None):
         self.app = QApplication.instance() or QApplication([])
         
         self.window = Window(profile)
